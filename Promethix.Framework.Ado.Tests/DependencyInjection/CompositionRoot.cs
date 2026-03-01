@@ -48,9 +48,10 @@ namespace Promethix.Framework.Ado.Tests.DependencyInjection
                 })
                 .Build();
 
-            // Register entire AdoScope configuration in DI
-            _ = services.AddScoped(provider => adoScopeConfiguration);
-            _ = services.AddScoped(provider => adoContextConfiguration);
+            // Register entire AdoScope configuration in DI.
+            // Factories are registered as singleton in StandardRegistrations, so these must be singleton too.
+            _ = services.AddSingleton(provider => adoScopeConfiguration);
+            _ = services.AddSingleton<IAdoContextOptionsRegistry>(provider => adoContextConfiguration);
         }
 
         /// <summary>

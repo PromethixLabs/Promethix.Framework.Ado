@@ -89,6 +89,16 @@ Install-Package Promethix.Framework.Ado
 
 ---
 
+### DI Lifetime Guidance
+
+- If `IAdoScopeFactory` and `IAdoContextGroupFactory` are registered as singleton (recommended), register `AdoScopeOptionsBuilder` and `IAdoContextOptionsRegistry` as singleton too.
+- If you need scoped configuration objects, register the factories as scoped as well.
+- Keep repositories/services that consume the ambient context as scoped.
+
+This avoids ASP.NET Core lifetime validation errors caused by singleton services depending on scoped services.
+
+---
+
 ### .NET with SQLite (Appsettings Example)
 
 ```csharp

@@ -11,25 +11,16 @@
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<Title>Promethix.Framework.AdoScope</Title>
 		<Description>
-AdoScope (Official): A simple and flexible way to manage your ADO database connections and transactions.
+AdoScope: lightweight ambient Unit of Work for ADO.NET and Dapper.
+Manages DbConnection and DbTransaction lifecycles with clean DI integration,
+nested scopes, multi-context coordination, and optional distributed transactions.
 
-Based on DbContextScope but for general ADO including Dapper.
+DI lifetime guidance (ASP.NET Core):
+- If IAdoScopeFactory and IAdoContextGroupFactory are singleton (recommended), register AdoScopeOptionsBuilder and IAdoContextOptionsRegistry as singleton too.
+- If configuration objects are scoped, factories must also be scoped.
+- Repositories/services that consume ambient context should remain scoped.
 
-Please README.md for usage details.
-
-public void ServiceLayerAddTestEntity()
-{
-    using IAdoScope adoScope = adoScopeFactory.Create();
-
-    // Create a test entity
-    var newTestEntity = new TestEntity { Name = "CreateTest", Description = "Test Description", Quantity = 1 };
-
-    // Call our repository to add the entity
-    simpleTestRepository.Add(newTestEntity);
-
-    // Commit the unit of work / transaction (if using ExecutionOption.Transactional)
-    adoScope.Complete();
-}
+See README.md for full configuration and usage examples.
 </Description>
 		<Version>$(BuildVersion)</Version>
 		<Authors>Christopher Law</Authors>
