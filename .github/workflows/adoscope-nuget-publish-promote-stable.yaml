@@ -11,6 +11,10 @@ on:
         required: true
         default: '1.0.0'
 
+permissions:
+  actions: read
+  contents: write
+
 env:
   NuGetDirectory: ${{ github.workspace }}/nuget
   NuGetDirectoryWin: ${{ github.workspace }}\nuget
@@ -40,7 +44,7 @@ jobs:
 
   build-package:
     name: Build
-    uses: gentoorax/Promethix.Framework.Ado/.github/workflows/adoscope-reusable-build.yaml@main
+    uses: ./.github/workflows/adoscope-reusable-build.yaml
     needs: extract-commit-hash
     with:
       buildVersion: ${{ github.event.inputs.new_package_version }}

@@ -1,6 +1,6 @@
 ﻿# AdoScope
 
-[![Build and Test](https://github.com/gentoorax/Promethix.Framework.Ado/actions/workflows/adoscope-nuget-build.yaml/badge.svg)](https://github.com/gentoorax/Promethix.Framework.Ado/actions/workflows/adoscope-nuget-build.yaml)
+[![Build and Test](https://github.com/PromethixLabs/Promethix.Framework.Ado/actions/workflows/adoscope-nuget-build.yaml/badge.svg)](https://github.com/PromethixLabs/Promethix.Framework.Ado/actions/workflows/adoscope-nuget-build.yaml)
 
 ---
 

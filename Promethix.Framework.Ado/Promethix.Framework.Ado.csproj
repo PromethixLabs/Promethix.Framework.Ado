@@ -27,13 +27,13 @@ See README.md for full configuration and usage examples.
 		<Company>Promethix</Company>
 		<Product>$(AssemblyName)</Product>
 		<Copyright>Copyright (c) 2023 Christopher Law (chris@chrislaw.me)</Copyright>
-		<PackageProjectUrl>https://github.com/gentoorax/Promethix.Framework.Ado</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/PromethixLabs/Promethix.Framework.Ado</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>AdoScope; DbContextScope; Dapper; DapperTransaction; AdoTransaction; Promethix; AdoConnection; AdoConnectionManager; ConnectionManager; DatabaseConnectionManager; AdoUnitOfWork; DapperUnitOfWork; AutomaticUnitOfWork; UnitOfWorkManager</PackageTags>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<AnalysisLevel>latest</AnalysisLevel>
 		<PackageLicenseFile>LICENCE</PackageLicenseFile>
-		<RepositoryUrl>https://github.com/gentoorax/Promethix.Framework.Ado</RepositoryUrl>
+		<RepositoryUrl>https://github.com/PromethixLabs/Promethix.Framework.Ado</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageReleaseNotes>Support added for implicit/explicit distributed transactions and ambient supression for async workloads.</PackageReleaseNotes>
 	</PropertyGroup>

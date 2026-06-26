@@ -7,6 +7,10 @@ on:
         required: true
         default: '1.0.0'
 
+permissions:
+  actions: read
+  contents: read
+
 env:
   NuGetDirectory: ${{ github.workspace}}/nuget
   NuGetDirectoryWin: ${{ github.workspace}}\nuget

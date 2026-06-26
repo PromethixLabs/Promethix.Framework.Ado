@@ -17,6 +17,10 @@ on:
       repoToken:
         required: true
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   NuGetDirectory: ${{ github.workspace }}/nuget
   NuGetDirectoryWin: ${{ github.workspace }}\nuget
@@ -27,7 +31,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.commitHash || 'main' }}
         
@@ -70,7 +74,7 @@ jobs:
 
       - name: Add NuGet Source
         working-directory: .
-        run: dotnet nuget add source --username gentoorax --password ${{ secrets.repoToken }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gentoorax/index.json"
+        run: dotnet nuget add source --username "${{ github.repository_owner }}" --password ${{ secrets.repoToken }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
 
       - name: List NuGet sources
         working-directory: .
