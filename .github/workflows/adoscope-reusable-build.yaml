@@ -20,10 +20,14 @@ on:
 permissions:
   contents: read
   packages: write
+  attestations: write
+  id-token: write
 
 env:
   NuGetDirectory: ${{ github.workspace }}/nuget
   NuGetDirectoryWin: ${{ github.workspace }}\nuget
+  SbomDirectory: ${{ github.workspace }}/sbom
+  SbomDirectoryWin: ${{ github.workspace }}\sbom
 
 jobs:
   build:
@@ -45,6 +49,10 @@ jobs:
         with:
           dotnet-version: ${{ inputs.dotnetVersion }}
 
+      - name: Install CycloneDX SBOM Tool
+        shell: pwsh
+        run: dotnet tool install --global CycloneDX --version 5.*
+
       - name: Clear NuGet Cache
         run: dotnet nuget locals all --clear
 
@@ -64,6 +72,29 @@ jobs:
         working-directory: .
         run: dotnet pack --no-restore --configuration Release --output ${{ env.NuGetDirectoryWin }}
 
+      - name: Generate Package Hashes
+        working-directory: .
+        shell: pwsh
+        run: |
+          $hashFile = Join-Path '${{ env.NuGetDirectoryWin }}' "Promethix.Framework.Ado.${{ inputs.buildVersion }}.sha256"
+          if (Test-Path $hashFile) {
+            Remove-Item -LiteralPath $hashFile -Force
+          }
+
+          Get-ChildItem -Path '${{ env.NuGetDirectoryWin }}' -Filter *.nupkg | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "{0} *{1}" -f $hash, $_.Name | Out-File -FilePath $hashFile -Encoding ascii -Append
+          }
+
+      - name: Generate SBOM
+        working-directory: .
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path '${{ env.SbomDirectoryWin }}' | Out-Null
+          dotnet-CycloneDX ".\Promethix.Framework.Ado.sln" `
+            --out '${{ env.SbomDirectoryWin }}' `
+            --filename "Promethix.Framework.Ado.${{ inputs.buildVersion }}.sbom.xml"
+
       - name: Upload Nuget Package Artifact
         uses: actions/upload-artifact@v6
         with:
@@ -71,6 +102,37 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           path: ${{ env.NuGetDirectoryWin }}\*.nupkg
+
+      - name: Upload Nuget Package Hashes
+        uses: actions/upload-artifact@v6
+        with:
+          name: Promethix.Framework.Ado.NuGet.${{ inputs.buildVersion }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+          path: ${{ env.NuGetDirectoryWin }}\*.sha256
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: Promethix.Framework.Ado.NuGet.${{ inputs.buildVersion }}.sbom
+          if-no-files-found: error
+          retention-days: 7
+          path: ${{ env.SbomDirectoryWin }}\*.sbom.xml
+
+      - name: Attest Nuget Package Provenance
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ env.NuGetDirectory }}/*.nupkg
+
+      - name: Attest Nuget Package Hashes
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ env.NuGetDirectory }}/*.sha256
+
+      - name: Attest SBOM
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ env.SbomDirectory }}/*.sbom.xml
 
       - name: Add NuGet Source
         working-directory: .

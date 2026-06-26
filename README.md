@@ -304,6 +304,20 @@ scope.Complete();
 
 ---
 
+## 🔐 Provenance
+
+Build workflows publish:
+
+- the `.nupkg` artifact
+- a `.sha256` checksum artifact for the package
+- a CycloneDX SBOM artifact for the build
+- a GitHub build provenance attestation for each artifact
+
+Verification material for published releases is intended to live at `https://trust.promethix.dev/nuget/`.
+Repository-side notes for this are in [docs/nuget-provenance.md](docs/nuget-provenance.md).
+
+---
+
 ## 🔄 Release Notes
 
 ### Stable Releases
