@@ -91,8 +91,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path '${{ env.SbomDirectoryWin }}' | Out-Null
-          dotnet-CycloneDX ".\Promethix.Framework.Ado.sln" `
-            --out '${{ env.SbomDirectoryWin }}' `
+          & "$env:USERPROFILE\.dotnet\tools\dotnet-CycloneDX.exe" ".\Promethix.Framework.Ado.sln" `
+            --output "${{ env.SbomDirectoryWin }}" `
             --filename "Promethix.Framework.Ado.${{ inputs.buildVersion }}.sbom.xml"
 
       - name: Upload Nuget Package Artifact
