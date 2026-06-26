@@ -1,7 +1,5 @@
 # NuGet Provenance
 
-`Promethix.Framework.Ado` is published to `nuget.org` without author signing.
-
 Release verification is based on:
 
 - `nuget.org` repository signing
@@ -30,7 +28,7 @@ Compare the resulting hash with the contents of `Promethix.Framework.Ado.<versio
 
 ## Attestation Verification
 
-Verification material is intended to be published at:
+Verification material is published at:
 
 - `https://trust.promethix.dev/nuget/`
 
@@ -41,8 +39,3 @@ That location should include:
 - source commit or release tag
 - SHA256 checksum
 - attestation verification instructions
-
-## Notes
-
-- This project does not currently use NuGet author signing.
-- If author signing is introduced later, it should be evaluated separately from GitHub provenance attestations.
