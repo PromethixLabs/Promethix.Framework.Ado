@@ -34,6 +34,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Microsoft.Data.Sqlite currently transitively restores SQLitePCLRaw.lib.e_sqlite3,
+         and the GitHub advisory has no patched NuGet release yet. Remove this suppression
+         once upstream ships a non-vulnerable package. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Promethix.Framework.Ado\Promethix.Framework.Ado.csproj" />
   </ItemGroup>
 
