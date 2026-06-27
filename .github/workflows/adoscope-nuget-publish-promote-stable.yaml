@@ -51,6 +51,7 @@ jobs:
     needs: extract-commit-hash
     with:
       buildVersion: ${{ github.event.inputs.new_package_version }}
+      releaseTag: ${{ github.event.inputs.new_package_version }}
       dotnetVersion: '10.0.x'
       commitHash: ${{ needs.extract-commit-hash.outputs.commit_hash }}
     secrets:

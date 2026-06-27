@@ -6,6 +6,10 @@ on:
       buildVersion:
         required: true
         type: string
+      packageId:
+        required: false
+        type: string
+        default: Promethix.Framework.Ado
       dotnetVersion:
         required: true
         type: string
@@ -13,6 +17,11 @@ on:
         required: false
         type: string
         description: 'Short SHA commit hash to checkout. If not provided, the latest commit will be used.'
+      releaseTag:
+        required: false
+        type: string
+        default: ''
+        description: 'Optional release tag to record in release metadata.'
     secrets:
       repoToken:
         required: true
@@ -28,6 +37,8 @@ env:
   NuGetDirectoryWin: ${{ github.workspace }}\nuget
   SbomDirectory: ${{ github.workspace }}/sbom
   SbomDirectoryWin: ${{ github.workspace }}\sbom
+  MetadataDirectory: ${{ github.workspace }}/metadata
+  MetadataDirectoryWin: ${{ github.workspace }}\metadata
 
 jobs:
   build:
@@ -95,6 +106,92 @@ jobs:
             --output "${{ env.SbomDirectoryWin }}" `
             --filename "Promethix.Framework.Ado.${{ inputs.buildVersion }}.sbom.xml"
 
+      - name: Generate Release Metadata
+        working-directory: .
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path '${{ env.MetadataDirectoryWin }}' | Out-Null
+
+          $packageId = '${{ inputs.packageId }}'
+          $version = '${{ inputs.buildVersion }}'
+          $slug = $packageId.ToLowerInvariant()
+          $releaseType = if ($version.Contains('-')) { 'prerelease' } else { 'stable' }
+          $nupkgName = "$packageId.$version.nupkg"
+          $sha256Name = "$packageId.$version.sha256"
+          $sbomName = "$packageId.$version.sbom.xml"
+          $sha256Path = Join-Path '${{ env.NuGetDirectoryWin }}' $sha256Name
+          $sha256Value = ((Get-Content -LiteralPath $sha256Path -TotalCount 1).Split(' ', 2)[0]).ToLowerInvariant()
+          $commitSha = '${{ inputs.commitHash }}'
+          if ([string]::IsNullOrWhiteSpace($commitSha)) {
+            $commitSha = '${{ github.sha }}'
+          }
+
+          $tag = '${{ inputs.releaseTag }}'
+          if ([string]::IsNullOrWhiteSpace($tag) -and $releaseType -eq 'stable') {
+            $tag = $version
+          }
+
+          $nugetUrl = $null
+          if ($releaseType -eq 'stable') {
+            $nugetUrl = "https://www.nuget.org/packages/$packageId/$version"
+          }
+
+          $metadata = [ordered]@{
+            schemaVersion = 1
+            packageId = $packageId
+            slug = $slug
+            version = $version
+            releaseType = $releaseType
+            releasedAt = '${{ github.run_started_at }}'
+            repoUrl = 'https://github.com/${{ github.repository }}'
+            source = [ordered]@{
+              provider = 'git'
+              commitSha = $commitSha
+              tag = if ([string]::IsNullOrWhiteSpace($tag)) { $null } else { $tag }
+            }
+            distribution = [ordered]@{
+              nugetUrl = $nugetUrl
+              githubPackagesUrl = "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+            }
+            artifacts = [ordered]@{
+              nupkg = [ordered]@{
+                name = $nupkgName
+              }
+              sha256 = [ordered]@{
+                name = $sha256Name
+                value = $sha256Value
+                algorithm = 'SHA256'
+              }
+              sbom = [ordered]@{
+                name = $sbomName
+                format = 'CycloneDX'
+              }
+              metadata = [ordered]@{
+                name = "release-metadata.$version.json"
+                format = 'PromethixTrustMetadata'
+              }
+            }
+            provenance = [ordered]@{
+              provider = 'github-actions'
+              workflow = [ordered]@{
+                repository = '${{ github.repository }}'
+                runId = '${{ github.run_id }}'
+                runNumber = '${{ github.run_number }}'
+                runAttempt = '${{ github.run_attempt }}'
+                runUrl = 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+                ref = '${{ github.ref }}'
+              }
+              attestation = [ordered]@{
+                provider = 'github-artifact-attestation'
+                available = $true
+                subjects = @($nupkgName, $sha256Name, $sbomName, "release-metadata.$version.json")
+              }
+            }
+          }
+
+          $metadataPath = Join-Path '${{ env.MetadataDirectoryWin }}' "release-metadata.$version.json"
+          $metadata | ConvertTo-Json -Depth 10 | Out-File -LiteralPath $metadataPath -Encoding utf8
+
       - name: Upload Nuget Package Artifact
         uses: actions/upload-artifact@v6
         with:
@@ -119,6 +216,14 @@ jobs:
           retention-days: 7
           path: ${{ env.SbomDirectoryWin }}\*.sbom.xml
 
+      - name: Upload Release Metadata Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: Promethix.Framework.Ado.NuGet.${{ inputs.buildVersion }}.metadata
+          if-no-files-found: error
+          retention-days: 30
+          path: ${{ env.MetadataDirectoryWin }}\*.json
+
       - name: Attest Nuget Package Provenance
         uses: actions/attest-build-provenance@v3
         with:
@@ -133,6 +238,11 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: ${{ env.SbomDirectory }}/*.sbom.xml
+
+      - name: Attest Release Metadata
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ env.MetadataDirectory }}/*.json
 
       - name: Add NuGet Source
         working-directory: .

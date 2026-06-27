@@ -14,9 +14,30 @@ For each build or promoted release, the workflow publishes:
 - `Promethix.Framework.Ado.<version>.nupkg`
 - `Promethix.Framework.Ado.<version>.sha256`
 - `Promethix.Framework.Ado.<version>.sbom.xml`
+- `release-metadata.<version>.json`
 - a GitHub artifact attestation for the package artifact
 - a GitHub artifact attestation for the checksum artifact
 - a GitHub artifact attestation for the SBOM artifact
+- a GitHub artifact attestation for the metadata artifact
+
+## Canonical Release Metadata
+
+The workflow emits a machine-readable `release-metadata.<version>.json` file alongside the package provenance artifacts.
+
+That metadata includes:
+
+- package id
+- package slug
+- version
+- prerelease/stable classification
+- release timestamp
+- source repository URL
+- source commit SHA
+- source tag, if applicable
+- distribution URLs
+- artifact names
+- SHA256 value
+- provenance provider and workflow run details
 
 ## Local Checksum Verification
 
