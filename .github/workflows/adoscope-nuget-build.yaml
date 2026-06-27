@@ -47,7 +47,7 @@ jobs:
           $revision = ${{ secrets.REVISION }}
           $commitHash = "${{ github.sha }}".Substring(0,7) # Short SHA
 
-          $buildVersion = "${major}.${minor}.${revision}-$commitHash-alpha"
+          $buildVersion = "${major}.${minor}.${revision}-alpha.${commitHash}"
           echo "BuildVersion=$buildVersion" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
           echo "BuildVersion=$buildVersion" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
 
