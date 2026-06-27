@@ -21,6 +21,9 @@ permissions:
 env:
   NuGetDirectory: ${{ github.workspace }}/nuget
   NuGetDirectoryWin: ${{ github.workspace }}\nuget
+  HashDirectory: ${{ github.workspace }}/hash
+  SbomDirectory: ${{ github.workspace }}/sbom
+  MetadataDirectory: ${{ github.workspace }}/metadata
 
 jobs:
   extract-commit-hash:
@@ -98,6 +101,24 @@ jobs:
         name: Promethix.Framework.Ado.NuGet.${{ github.event.inputs.new_package_version }}
         path: ${{ env.NuGetDirectory }}
 
+    - name: Download checksum artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: Promethix.Framework.Ado.NuGet.${{ github.event.inputs.new_package_version }}.sha256
+        path: ${{ env.HashDirectory }}
+
+    - name: Download SBOM artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: Promethix.Framework.Ado.NuGet.${{ github.event.inputs.new_package_version }}.sbom
+        path: ${{ env.SbomDirectory }}
+
+    - name: Download metadata artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: Promethix.Framework.Ado.NuGet.${{ github.event.inputs.new_package_version }}.metadata
+        path: ${{ env.MetadataDirectory }}
+
     - name: Publish Nuget Package Promethix.Framework.Ado
       working-directory: .
       run: |
@@ -107,4 +128,30 @@ jobs:
         ls ${{ env.NuGetDirectory }}
         NEW_PACKAGE_VERSION=${{ github.event.inputs.new_package_version }}
         dotnet nuget push ${{ env.NuGetDirectory }}/Promethix.Framework.Ado.${NEW_PACKAGE_VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+
+    - name: Create or update GitHub release
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        NEW_PACKAGE_VERSION: ${{ github.event.inputs.new_package_version }}
+      run: |
+        gh release view "$NEW_PACKAGE_VERSION" --repo "${{ github.repository }}" > /dev/null 2>&1 || \
+        gh release create "$NEW_PACKAGE_VERSION" \
+          --repo "${{ github.repository }}" \
+          --title "$NEW_PACKAGE_VERSION" \
+          --target "$NEW_PACKAGE_VERSION" \
+          --latest \
+          --notes "Release provenance assets for $NEW_PACKAGE_VERSION"
+
+    - name: Upload release assets
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        NEW_PACKAGE_VERSION: ${{ github.event.inputs.new_package_version }}
+      run: |
+        gh release upload "$NEW_PACKAGE_VERSION" \
+          "${{ env.NuGetDirectory }}/Promethix.Framework.Ado.${NEW_PACKAGE_VERSION}.nupkg" \
+          "${{ env.HashDirectory }}/Promethix.Framework.Ado.${NEW_PACKAGE_VERSION}.sha256" \
+          "${{ env.SbomDirectory }}/Promethix.Framework.Ado.${NEW_PACKAGE_VERSION}.sbom.xml" \
+          "${{ env.MetadataDirectory }}/release-metadata.${NEW_PACKAGE_VERSION}.json" \
+          --repo "${{ github.repository }}" \
+          --clobber
 

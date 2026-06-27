@@ -53,6 +53,8 @@ Verification material is published at:
 
 - `https://trust.promethix.dev/nuget/`
 
+For promoted prereleases and stable releases, checksum, SBOM, and metadata artifacts are also published as GitHub release assets.
+
 That location should include:
 
 - package version

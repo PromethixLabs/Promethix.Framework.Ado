@@ -9,15 +9,41 @@ on:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
 
 env:
   NuGetDirectory: ${{ github.workspace}}/nuget
   NuGetDirectoryWin: ${{ github.workspace}}\nuget
+  HashDirectory: ${{ github.workspace}}/hash
+  SbomDirectory: ${{ github.workspace}}/sbom
+  MetadataDirectory: ${{ github.workspace}}/metadata
 
 jobs:
+  extract-commit-hash:
+    name: Extract Commit Hash
+    runs-on: ubuntu-latest
+    outputs:
+      commit_hash: ${{ steps.set_commit_hash.outputs.commit_hash }}
+    steps:
+      - name: Extract Commit Hash
+        id: set_commit_hash
+        env:
+          PACKAGE_VERSION: ${{ github.event.inputs.package_version }}
+        run: |
+          $pattern = '-([0-9a-f]{7,40})-alpha'
+          if ($env:PACKAGE_VERSION -match $pattern) {
+            $commitHash = $Matches[1]
+            echo "commit_hash=$commitHash" >> $GITHUB_ENV
+            echo "commit_hash=$commitHash" >> $GITHUB_OUTPUT
+          } else {
+            Write-Error "Commit hash not found in package version."
+            exit 1
+          }
+        shell: pwsh
+
   publish:
     name: Publish Promethix.Framework.Ado
+    needs: extract-commit-hash
     runs-on: ubuntu-latest
     steps:
     - name: Download artifact
@@ -30,6 +56,33 @@ jobs:
         path: ${{ env.NuGetDirectory }}
         search_artifacts: true
 
+    - name: Download checksum artifact
+      uses: dawidd6/action-download-artifact@v18
+      with:
+        name: Promethix.Framework.Ado.NuGet.${{ inputs.package_version }}.sha256
+        github_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+        workflow: adoscope-nuget-build.yaml
+        path: ${{ env.HashDirectory }}
+        search_artifacts: true
+
+    - name: Download SBOM artifact
+      uses: dawidd6/action-download-artifact@v18
+      with:
+        name: Promethix.Framework.Ado.NuGet.${{ inputs.package_version }}.sbom
+        github_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+        workflow: adoscope-nuget-build.yaml
+        path: ${{ env.SbomDirectory }}
+        search_artifacts: true
+
+    - name: Download metadata artifact
+      uses: dawidd6/action-download-artifact@v18
+      with:
+        name: Promethix.Framework.Ado.NuGet.${{ inputs.package_version }}.metadata
+        github_token: ${{ secrets.REPO_ACCESS_TOKEN }}
+        workflow: adoscope-nuget-build.yaml
+        path: ${{ env.MetadataDirectory }}
+        search_artifacts: true
+
     - name: Publish Nuget Package Promethix.Framework.Ado
       working-directory: .
       run: |
@@ -39,3 +92,29 @@ jobs:
         ls ${{ env.NuGetDirectory }}
         PACKAGE_VERSION=${{ inputs.package_version }}
         dotnet nuget push ${{ env.NuGetDirectory }}/Promethix.Framework.Ado.${PACKAGE_VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+
+    - name: Create or update GitHub prerelease
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        PACKAGE_VERSION: ${{ inputs.package_version }}
+      run: |
+        gh release view "$PACKAGE_VERSION" --repo "${{ github.repository }}" > /dev/null 2>&1 || \
+        gh release create "$PACKAGE_VERSION" \
+          --repo "${{ github.repository }}" \
+          --title "$PACKAGE_VERSION" \
+          --prerelease \
+          --target "${{ needs.extract-commit-hash.outputs.commit_hash }}" \
+          --notes "Pre-release provenance assets for $PACKAGE_VERSION"
+
+    - name: Upload prerelease assets
+      env:
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        PACKAGE_VERSION: ${{ inputs.package_version }}
+      run: |
+        gh release upload "$PACKAGE_VERSION" \
+          "${{ env.NuGetDirectory }}/Promethix.Framework.Ado.${PACKAGE_VERSION}.nupkg" \
+          "${{ env.HashDirectory }}/Promethix.Framework.Ado.${PACKAGE_VERSION}.sha256" \
+          "${{ env.SbomDirectory }}/Promethix.Framework.Ado.${PACKAGE_VERSION}.sbom.xml" \
+          "${{ env.MetadataDirectory }}/release-metadata.${PACKAGE_VERSION}.json" \
+          --repo "${{ github.repository }}" \
+          --clobber
