@@ -73,7 +73,7 @@ jobs:
 
       - name: Build
         working-directory: .
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build --no-restore --configuration Release -p:BuildVersion=${{ inputs.buildVersion }} -p:Version=${{ inputs.buildVersion }}
 
       - name: Run Tests
         working-directory: ./Promethix.Framework.Ado.Tests
@@ -81,7 +81,18 @@ jobs:
 
       - name: Package
         working-directory: .
-        run: dotnet pack --no-restore --configuration Release --output ${{ env.NuGetDirectoryWin }}
+        run: dotnet pack --no-restore --configuration Release --output ${{ env.NuGetDirectoryWin }} -p:BuildVersion=${{ inputs.buildVersion }} -p:Version=${{ inputs.buildVersion }}
+
+      - name: Validate Package Version
+        working-directory: .
+        shell: pwsh
+        run: |
+          $expected = "Promethix.Framework.Ado.${{ inputs.buildVersion }}.nupkg"
+          $package = Get-ChildItem -Path '${{ env.NuGetDirectoryWin }}' -Filter *.nupkg | Select-Object -First 1 -ExpandProperty Name
+          if ($package -ne $expected) {
+            Write-Error "Expected package '$expected' but found '$package'."
+            exit 1
+          }
 
       - name: Generate Package Hashes
         working-directory: .
