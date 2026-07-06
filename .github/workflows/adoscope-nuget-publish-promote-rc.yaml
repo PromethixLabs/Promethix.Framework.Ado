@@ -127,7 +127,7 @@ jobs:
           --repo "${{ github.repository }}" \
           --title "$NEW_PACKAGE_VERSION" \
           --prerelease \
-          --target "$NEW_PACKAGE_VERSION" \
+          --target "${{ needs.extract-commit-hash.outputs.commit_hash }}" \
           --notes "RC release provenance assets for $NEW_PACKAGE_VERSION"
 
     - name: Upload prerelease assets

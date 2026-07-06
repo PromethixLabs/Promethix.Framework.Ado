@@ -147,7 +147,7 @@ jobs:
         gh release create "$NEW_PACKAGE_VERSION" \
           --repo "${{ github.repository }}" \
           --title "$NEW_PACKAGE_VERSION" \
-          --target "$NEW_PACKAGE_VERSION" \
+          --target "${{ needs.extract-commit-hash.outputs.commit_hash }}" \
           --latest \
           --notes "Release provenance assets for $NEW_PACKAGE_VERSION"
 
