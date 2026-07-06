@@ -4,6 +4,7 @@
  * https://chrislaw.me
  */
 using Promethix.Framework.Ado.Enums;
+using Promethix.Framework.Ado.Exceptions;
 using Promethix.Framework.Ado.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -95,6 +96,11 @@ namespace Promethix.Framework.Ado.Implementation
                 if ((adoContextOptionsRegistry?.TryGetContextOptions<TAdoContext>(out AdoContextOptionsBuilder options) != null) && options != null)
                 {
                     adoContext.ConfigureContext(options);
+                }
+
+                if (!adoContext.IsConfigured)
+                {
+                    throw new UnconfiguredAdoContextException(typeof(TAdoContext));
                 }
 
                 initialisedAdoContexts.Add(typeof(TAdoContext), adoContext);

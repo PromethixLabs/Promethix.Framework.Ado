@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Promethix.Framework.Ado.Enums;
+using Promethix.Framework.Ado.Exceptions;
 using Promethix.Framework.Ado.Implementation;
 using Promethix.Framework.Ado.Interfaces;
 using System.Data.Common;
@@ -56,7 +57,22 @@ namespace Promethix.Framework.Ado.Tests.IntegrationTests
             }
         }
 
+        [TestMethod]
+        public void UnconfiguredContext_ThrowsExplicitLibraryException()
+        {
+            using IAdoScope adoScope = adoScopeFactory.Create();
+
+            UnconfiguredAdoContextException ex = Assert.ThrowsException<UnconfiguredAdoContextException>(
+                () => ambientAdoContextLocator.GetContext<UnconfiguredSqliteContext>());
+
+            StringAssert.Contains(ex.Message, nameof(UnconfiguredSqliteContext));
+        }
+
         public class NonTransactionalSqliteContext : AdoContext
+        {
+        }
+
+        public class UnconfiguredSqliteContext : AdoContext
         {
         }
     }
