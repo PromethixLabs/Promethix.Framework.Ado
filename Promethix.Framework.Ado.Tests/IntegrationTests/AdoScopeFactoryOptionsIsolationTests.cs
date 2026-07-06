@@ -42,12 +42,16 @@ namespace Promethix.Framework.Ado.Tests.IntegrationTests
         [TestMethod]
         public void ExplicitScopeOverrides_DoNotLeakIntoLaterScopes()
         {
+            NonTransactionalSqliteContext explicitContext;
+
             using (IAdoScope explicitScope = adoScopeFactory.CreateWithTransaction(System.Data.IsolationLevel.ReadCommitted))
             {
-                NonTransactionalSqliteContext explicitContext = ambientAdoContextLocator.GetContext<NonTransactionalSqliteContext>();
+                explicitContext = ambientAdoContextLocator.GetContext<NonTransactionalSqliteContext>();
                 Assert.IsTrue(explicitContext.IsInTransaction);
                 explicitScope.Complete();
             }
+
+            Assert.IsFalse(explicitContext.IsInTransaction);
 
             using (IAdoScope defaultScope = adoScopeFactory.Create())
             {
@@ -55,6 +59,20 @@ namespace Promethix.Framework.Ado.Tests.IntegrationTests
                 Assert.IsFalse(defaultContext.IsInTransaction);
                 defaultScope.Complete();
             }
+        }
+
+        [TestMethod]
+        public void IncompleteExplicitScope_ClearsTransactionStateOnRollback()
+        {
+            NonTransactionalSqliteContext rollbackContext;
+
+            using (IAdoScope explicitScope = adoScopeFactory.CreateWithTransaction(System.Data.IsolationLevel.ReadCommitted))
+            {
+                rollbackContext = ambientAdoContextLocator.GetContext<NonTransactionalSqliteContext>();
+                Assert.IsTrue(rollbackContext.IsInTransaction);
+            }
+
+            Assert.IsFalse(rollbackContext.IsInTransaction);
         }
 
         [TestMethod]

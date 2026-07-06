@@ -103,6 +103,7 @@ namespace Promethix.Framework.Ado.Implementation
         {
             transaction.Commit();
             transaction.Dispose();
+            transaction = null;
         }
 
         protected internal void ConfigureContext(AdoContextOptionsBuilder adoContextOptions)
@@ -136,6 +137,7 @@ namespace Promethix.Framework.Ado.Implementation
                 }
 
                 transaction?.Dispose();
+                transaction = null;
                 connection?.Close();
                 connection?.Dispose();
 
@@ -154,6 +156,7 @@ namespace Promethix.Framework.Ado.Implementation
         {
             transaction.Rollback();
             transaction.Dispose();
+            transaction = null;
         }
     }
 }
