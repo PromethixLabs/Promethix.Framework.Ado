@@ -41,15 +41,15 @@ No need to manually manage transactions, connection lifetimes, or implement repe
 
 ## Features
 
-- ✅ Lightweight ambient scope for ADO.NET
-- ✅ Provider-agnostic by design (validated in this repo with SQLite and MSSQL examples/tests)
-- ✅ Minimal effort Unit of Work via scoped transactions
-- ✅ Nested scope support
-- ✅ Support for **multiple databases** in the same transaction
-- ✅ **Distributed transaction** support across databases
-- ✅ Asynchronous-safe ambient scope usage, including distributed scopes with async flow enabled
-- ✅ Configurable per context and per scope (transactional / non-transactional)
-- ✅ Isolation level configuration per context or scope
+- Lightweight ambient scope for ADO.NET
+- Provider-agnostic by design (validated in this repo with SQLite and MSSQL examples/tests)
+- Minimal effort Unit of Work via scoped transactions
+- Nested scope support
+- Support for **multiple databases** in the same transaction
+- **Distributed transaction** support across databases
+- Asynchronous-safe ambient scope usage, including distributed scopes with async flow enabled
+- Configurable per context and per scope (transactional / non-transactional)
+- Isolation level configuration per context or scope
 
 ---
 
@@ -294,10 +294,10 @@ scope.Complete();
 
 ## Notes and Gotchas
 
-- ✅ You **must call `.Complete()`** to commit a transactional scope. If not called, the transaction will automatically roll back on dispose.
-- ✅ If you forget to declare an ambient scope (i.e. no `adoScopeFactory.Create()`), an explicit and helpful exception will be thrown.
-- ✅ `CreateWithTransaction()` and `CreateWithDistributedTransaction()` allow full per-scope control of transaction behavior.
-- ✅ When using **Distributed Transactions**, ensure:
+- You **must call `.Complete()`** to commit a transactional scope. If not called, the transaction will automatically roll back on dispose.
+- If you forget to declare an ambient scope (i.e. no `adoScopeFactory.Create()`), an explicit and helpful exception will be thrown.
+- `CreateWithTransaction()` and `CreateWithDistributedTransaction()` allow full per-scope control of transaction behavior.
+- When using **Distributed Transactions**, ensure:
   - .NET 7+ is used
   - Windows OS with **MSDTC** service is enabled and running
   - ADO.NET provider supports distributed transactions
