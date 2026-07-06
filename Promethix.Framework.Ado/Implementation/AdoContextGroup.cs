@@ -70,7 +70,10 @@ namespace Promethix.Framework.Ado.Implementation
                     ? new TransactionOptions { IsolationLevel = (System.Transactions.IsolationLevel)adoScopeOptions.IsolationLevel.Value }
                     : new TransactionOptions();
 
-                transactionScope = new TransactionScope(TransactionScopeOption.Required, transactionOptions);
+                transactionScope = new TransactionScope(
+                    TransactionScopeOption.Required,
+                    transactionOptions,
+                    TransactionScopeAsyncFlowOption.Enabled);
             }
         }
 

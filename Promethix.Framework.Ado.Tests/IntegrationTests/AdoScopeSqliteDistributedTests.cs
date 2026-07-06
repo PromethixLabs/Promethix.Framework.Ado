@@ -60,6 +60,30 @@ namespace Promethix.Framework.Ado.Tests.IntegrationTests
         }
 
         [TestCategory("IntegrationTestsOnCI"), TestMethod]
+        public async Task SqliteAdoScopeBasicDistributedAsyncFlowTest()
+        {
+            using (IAdoScope adoScope = adoScopeFactory.Create())
+            {
+                await Task.Yield();
+
+                simpleTestRepository.CreateDatabase();
+
+                var newTestEntity = new TestEntity { Name = "CreateTestAsync", Description = "Test Description", Quantity = 1 };
+
+                simpleTestRepository.Add(newTestEntity);
+                simpleTestRepository.AddWithDifferentContext(newTestEntity);
+
+                adoScope.Complete();
+            }
+
+            using (IAdoScope adoScope = adoScopeFactory.Create())
+            {
+                TestEntity? testEntity = simpleTestRepository.GetEntityByName("CreateTestAsync");
+                Assert.IsNotNull(testEntity);
+            }
+        }
+
+        [TestCategory("IntegrationTestsOnCI"), TestMethod]
         public void SqliteAdoScopeDistributedTest()
         {
             int recordCountBefore = GetRecordCountFirstContext();
