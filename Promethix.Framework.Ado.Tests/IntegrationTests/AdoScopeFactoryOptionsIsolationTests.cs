@@ -1,0 +1,63 @@
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.DependencyInjection;
+using Promethix.Framework.Ado.Enums;
+using Promethix.Framework.Ado.Implementation;
+using Promethix.Framework.Ado.Interfaces;
+using System.Data.Common;
+
+namespace Promethix.Framework.Ado.Tests.IntegrationTests
+{
+    [TestClass]
+    public class AdoScopeFactoryOptionsIsolationTests
+    {
+        private readonly IAdoScopeFactory adoScopeFactory;
+
+        private readonly IAmbientAdoContextLocator ambientAdoContextLocator;
+
+        public AdoScopeFactoryOptionsIsolationTests()
+        {
+            var services = new ServiceCollection();
+            DbProviderFactories.RegisterFactory("Microsoft.Data.Sqlite", SqliteFactory.Instance);
+
+            services.AddSingleton<IAmbientAdoContextLocator, AmbientAdoContextLocator>();
+            services.AddSingleton<IAdoContextGroupFactory, AdoContextGroupFactory>();
+            services.AddSingleton<IAdoScopeFactory, AdoScopeFactory>();
+            services.AddSingleton(new AdoScopeOptionsBuilder()
+                .WithScopeExecutionOption(AdoContextGroupExecutionOption.Standard));
+            services.AddSingleton<IAdoContextOptionsRegistry>(_ =>
+                new AdoContextConfigurationBuilder()
+                    .AddAdoContext<NonTransactionalSqliteContext>(options => options
+                        .WithNamedContext(nameof(NonTransactionalSqliteContext))
+                        .WithProviderName("Microsoft.Data.Sqlite")
+                        .WithConnectionString("Data Source=options-isolation.db")
+                        .WithExecutionOption(AdoContextExecutionOption.NonTransactional))
+                    .Build());
+
+            ServiceProvider container = services.BuildServiceProvider();
+            adoScopeFactory = container.GetRequiredService<IAdoScopeFactory>();
+            ambientAdoContextLocator = container.GetRequiredService<IAmbientAdoContextLocator>();
+        }
+
+        [TestMethod]
+        public void ExplicitScopeOverrides_DoNotLeakIntoLaterScopes()
+        {
+            using (IAdoScope explicitScope = adoScopeFactory.CreateWithTransaction(System.Data.IsolationLevel.ReadCommitted))
+            {
+                NonTransactionalSqliteContext explicitContext = ambientAdoContextLocator.GetContext<NonTransactionalSqliteContext>();
+                Assert.IsTrue(explicitContext.IsInTransaction);
+                explicitScope.Complete();
+            }
+
+            using (IAdoScope defaultScope = adoScopeFactory.Create())
+            {
+                NonTransactionalSqliteContext defaultContext = ambientAdoContextLocator.GetContext<NonTransactionalSqliteContext>();
+                Assert.IsFalse(defaultContext.IsInTransaction);
+                defaultScope.Complete();
+            }
+        }
+
+        public class NonTransactionalSqliteContext : AdoContext
+        {
+        }
+    }
+}

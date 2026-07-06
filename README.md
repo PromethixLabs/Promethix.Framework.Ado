@@ -91,7 +91,7 @@ Install-Package Promethix.Framework.Ado
 
 ### DI Lifetime Guidance
 
-- If `IAdoScopeFactory` and `IAdoContextGroupFactory` are registered as singleton (recommended), register `AdoScopeOptionsBuilder` and `IAdoContextOptionsRegistry` as singleton too.
+- If `IAdoScopeFactory` and `IAdoContextGroupFactory` are registered as singleton (recommended), register `AdoScopeOptionsBuilder` and `IAdoContextOptionsRegistry` as singleton too. Per-scope overrides are applied to a copied options snapshot, so singleton registration does not share mutable scope settings between calls.
 - If you need scoped configuration objects, register the factories as scoped as well.
 - Keep repositories/services that consume the ambient context as scoped.
 

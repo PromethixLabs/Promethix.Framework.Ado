@@ -51,7 +51,7 @@ namespace Promethix.Framework.Ado.Implementation
 
         private AdoScopeOverrideOptionsBuilder Overrides()
         {
-            return new AdoScopeOverrideOptionsBuilder(adoScopeOptions);
+            return new AdoScopeOverrideOptionsBuilder(new AdoScopeOptions(adoScopeOptions));
         }
     }
 }
