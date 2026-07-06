@@ -4,7 +4,7 @@
 
 ---
 
-## 💡 What This Looks Like in Practice
+## What This Looks Like in Practice
 
 Here’s how you can structure a clean, scoped unit of work across multiple repositories using AdoScope:
 
@@ -22,7 +22,7 @@ no manual transaction handling, no passing connections around, just clean and ma
 
 ---
 
-## 📘 What is AdoScope?
+## What is AdoScope?
 
 **AdoScope** is a lightweight and flexible library for Dapper and ADO.NET that manages DbConnection and DbTransaction lifecycles, while providing clean, scoped transactions through an ambient context pattern.
 
@@ -39,21 +39,21 @@ No need to manually manage transactions, connection lifetimes, or implement repe
 
 ---
 
-## ✨ Features
+## Features
 
 - ✅ Lightweight ambient scope for ADO.NET
-- ✅ Provider-agnostic (works with MSSQL, SQLite, PostgreSQL, etc.)
+- ✅ Provider-agnostic by design (validated in this repo with SQLite and MSSQL examples/tests)
 - ✅ Minimal effort Unit of Work via scoped transactions
 - ✅ Nested scope support
 - ✅ Support for **multiple databases** in the same transaction
 - ✅ **Distributed transaction** support across databases
-- ✅ Asynchronous-safe usage
+- ✅ Asynchronous-safe ambient scope usage, including distributed scopes with async flow enabled
 - ✅ Configurable per context and per scope (transactional / non-transactional)
 - ✅ Isolation level configuration per context or scope
 
 ---
 
-### 🧩 What is a Context?
+### What is a Context?
 
 In **Entity Framework**, a `DbContext` represents a session with the database. It tracks changes to entities, handles LINQ queries, and manages both the **connection** and **transaction** lifecycle. It's tightly coupled to EF’s change tracking and object-relational mapping features.
 
@@ -68,7 +68,7 @@ So while an AdoScope context doesn't track entities, it **does** provide the oth
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```powershell
 Install-Package Promethix.Framework.Ado
@@ -76,7 +76,7 @@ Install-Package Promethix.Framework.Ado
 
 ---
 
-## 🔧 Configuration (Dependency Injection)
+## Configuration (Dependency Injection)
 
 ### Configuration Options
 
@@ -224,7 +224,7 @@ kernel.Bind<IAdoContextOptionsRegistry>().ToConstant(adoContextConfig).InSinglet
 ```
 ---
 
-## 🧪 Usage
+## Usage
 
 ### 1. Define Your Context
 
@@ -292,7 +292,7 @@ scope.Complete();
 
 ---
 
-## ⚠️ Notes and Gotchas
+## Notes and Gotchas
 
 - ✅ You **must call `.Complete()`** to commit a transactional scope. If not called, the transaction will automatically roll back on dispose.
 - ✅ If you forget to declare an ambient scope (i.e. no `adoScopeFactory.Create()`), an explicit and helpful exception will be thrown.
@@ -301,10 +301,11 @@ scope.Complete();
   - .NET 7+ is used
   - Windows OS with **MSDTC** service is enabled and running
   - ADO.NET provider supports distributed transactions
+  - the distributed path is validated in this repository on Windows test targets
 
 ---
 
-## 🔐 Provenance
+## Provenance
 
 Build workflows publish:
 
@@ -318,11 +319,16 @@ Repository-side notes for this are in [docs/nuget-provenance.md](docs/nuget-prov
 
 ---
 
-## 🔄 Release Notes
+## Release Notes
 
 ### Stable Releases
 - Support for nested scopes, async operations, multiple DBs, and distributed transactions
-- Latest release supports .NET 8
+- Current package targets `net48`, `net8.0`, and `net10.0`
+
+### Test Coverage
+- Automated tests in this repository run on `net8.0-windows` and `net10.0-windows`.
+- SQLite integration tests run in CI-style local execution.
+- MSSQL integration tests require a local SQL Server instance and are not part of the default automated run.
 
 ### Maintenance & Support
 - Actively maintained to track .NET (Core) LTS releases.
@@ -331,24 +337,24 @@ Repository-side notes for this are in [docs/nuget-provenance.md](docs/nuget-prov
 
 ---
 
-## 🛣️ Roadmap / Future Features
+## Roadmap / Future Features
 
 - [ ] Support for read-only transactions
 
 ---
 
-## ❤️ Credits
+## Credits
 
 Inspired by Mehdime El Gueddari’s [DbContextScope](https://github.com/mehdime/DbContextScope) project.
 
 ---
 
-## 🙌 Contributing
+## Contributing
 
 Pull requests and suggestions welcome! Feel free to open an issue for bugs, ideas, or questions.
 
 ---
 
-## 📄 License
+## License
 
 MIT
