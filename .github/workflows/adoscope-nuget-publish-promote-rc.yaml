@@ -115,7 +115,9 @@ jobs:
     - name: Publish NuGet Package Promethix.Framework.Ado
       run: |
         NEW_PACKAGE_VERSION=${{ github.event.inputs.new_package_version }}
-        dotnet nuget push ${{ env.NuGetDirectory }}/Promethix.Framework.Ado.${NEW_PACKAGE_VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+        echo "Attempting to publish Promethix.Framework.Ado.${NEW_PACKAGE_VERSION}.nupkg to NuGet.org."
+        echo "If this version was already published by a previous run, dotnet will warn and continue because --skip-duplicate is enabled."
+        dotnet nuget push ${{ env.NuGetDirectory }}/Promethix.Framework.Ado.${NEW_PACKAGE_VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
 
     - name: Create or update GitHub prerelease
       env:
