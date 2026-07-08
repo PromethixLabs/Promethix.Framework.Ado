@@ -10,6 +10,10 @@ on:
         description: 'RC promotion version'
         required: true
         default: '1.0.0-rc1'
+      release_notes_file:
+        description: 'Optional path to checked-in Markdown release notes. Defaults to .github/release-notes/<new_package_version>.md'
+        required: false
+        default: ''
 
 permissions:
   actions: read
@@ -88,6 +92,31 @@ jobs:
       SbomDirectory: ${{ github.workspace }}/sbom
       MetadataDirectory: ${{ github.workspace }}/metadata
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
+
+    - name: Resolve release notes file
+      id: release_notes
+      env:
+        INPUT_RELEASE_NOTES_FILE: ${{ github.event.inputs.release_notes_file }}
+        NEW_PACKAGE_VERSION: ${{ github.event.inputs.new_package_version }}
+      run: |
+        if [ -n "$INPUT_RELEASE_NOTES_FILE" ]; then
+          release_notes_file="$INPUT_RELEASE_NOTES_FILE"
+        else
+          release_notes_file=".github/release-notes/${NEW_PACKAGE_VERSION}.md"
+        fi
+
+        if [ ! -f "$release_notes_file" ]; then
+          echo "Required release notes file not found: $release_notes_file" >&2
+          exit 1
+        fi
+
+        echo "release_notes_file=$release_notes_file" >> "$GITHUB_OUTPUT"
+
     - name: Download artifact
       uses: actions/download-artifact@v8
       with:
@@ -123,14 +152,22 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
         NEW_PACKAGE_VERSION: ${{ github.event.inputs.new_package_version }}
+        RELEASE_NOTES_FILE: ${{ steps.release_notes.outputs.release_notes_file }}
       run: |
-        gh release view "$NEW_PACKAGE_VERSION" --repo "${{ github.repository }}" > /dev/null 2>&1 || \
-        gh release create "$NEW_PACKAGE_VERSION" \
-          --repo "${{ github.repository }}" \
-          --title "$NEW_PACKAGE_VERSION" \
-          --prerelease \
-          --target "${{ needs.extract-commit-hash.outputs.commit_hash }}" \
-          --notes "RC release provenance assets for $NEW_PACKAGE_VERSION"
+        if gh release view "$NEW_PACKAGE_VERSION" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+          gh release edit "$NEW_PACKAGE_VERSION" \
+            --repo "${{ github.repository }}" \
+            --title "$NEW_PACKAGE_VERSION" \
+            --notes-file "$RELEASE_NOTES_FILE" \
+            --prerelease
+        else
+          gh release create "$NEW_PACKAGE_VERSION" \
+            --repo "${{ github.repository }}" \
+            --title "$NEW_PACKAGE_VERSION" \
+            --prerelease \
+            --target "${{ needs.extract-commit-hash.outputs.commit_hash }}" \
+            --notes-file "$RELEASE_NOTES_FILE"
+        fi
 
     - name: Upload prerelease assets
       env:
