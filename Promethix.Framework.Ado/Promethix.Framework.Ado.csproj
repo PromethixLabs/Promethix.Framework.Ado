@@ -8,6 +8,8 @@
 		<AnalysisMode>AllEnabledByDefault</AnalysisMode>
 		<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<NuGetAudit>true</NuGetAudit>
+		<NuGetAuditMode>all</NuGetAuditMode>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<Title>Promethix.Framework.AdoScope</Title>
 		<Description>
@@ -35,7 +37,7 @@ See README.md for full configuration and usage examples.
 		<PackageLicenseFile>LICENCE</PackageLicenseFile>
 		<RepositoryUrl>https://github.com/PromethixLabs/Promethix.Framework.Ado</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageReleaseNotes>Support added for implicit/explicit distributed transactions and ambient supression for async workloads.</PackageReleaseNotes>
+		<PackageReleaseNotes>Enabled direct and transitive NuGet vulnerability auditing and updated the test suite's native SQLite dependency to 3.53.4.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

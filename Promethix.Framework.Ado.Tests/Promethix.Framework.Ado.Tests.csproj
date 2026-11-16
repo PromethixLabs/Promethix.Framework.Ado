@@ -11,6 +11,8 @@
 
 	<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	<NuGetAudit>true</NuGetAudit>
+	<NuGetAuditMode>all</NuGetAuditMode>
 	<EnableNETAnalyzers>true</EnableNETAnalyzers>
   </PropertyGroup>
 
@@ -29,6 +31,8 @@
     <PackageReference Include="MSTest.TestAdapter" Version="3.6.3" />
     <PackageReference Include="MSTest.TestFramework" Version="3.6.3" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <!-- Keep the test bundle's native SQLite above the 3.53.2 security fixes. -->
+    <PackageReference Include="SourceGear.sqlite3" Version="3.53.4" />
     <PackageReference Include="coverlet.collector" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
